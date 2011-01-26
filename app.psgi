@@ -29,8 +29,9 @@ get "/{tweet:[0-9]+}" => sub {
       $res->content_type("image/png");
       $res->send($data);
     }
-
-    $res->not_found;
+    else {
+      $res->not_found;
+    }
   });
 };
 
