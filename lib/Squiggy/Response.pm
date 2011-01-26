@@ -64,4 +64,12 @@ sub forward {
   Squiggy::dispatch($self->{env}, $self->{cb});
 }
 
+sub not_found {
+  my $self = shift;
+
+  $self->status(404);
+  $self->body("not found");
+  $self->send;
+}
+
 1;

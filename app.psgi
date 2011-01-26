@@ -23,10 +23,14 @@ get "/{tweet:[0-9]+}" => sub {
 
   $twitter->get("statuses/show/$id", sub {
     my ($hdr, $tweet, $reason) = @_;
-    my $data = tweet_image $tweet;
+    
+    if ($reason eq "OK") {
+      my $data = tweet_image $tweet;
+      $res->content_type("image/png");
+      $res->send($data);
+    }
 
-    $res->content_type("image/png");
-    $res->send($data);
+    $res->not_found;
   });
 };
 
