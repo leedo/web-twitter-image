@@ -49,29 +49,39 @@ sub tweet_image {
     xmax => 290, ymax => $inner_height, filled => 1,
   );
 
-  my $arrowx = 30;
-  $img->polygon(
-    points => [[$arrowx, $inner_height],[$arrowx+20, $inner_height + 17],[$arrowx+20, $inner_height]],
-    color => "white"
-  );
-
   Imager::Font::Wrap->wrap_text(
     string => $text, font => $font, width => 270,
     image => $img, x => 17, y => 5, align => 0
   );
 
-  $img->align_string(
-    y => $inner_height + 10, x => 60, font => $font,
+  @d = $img->align_string(
+    y => $inner_height + 17, x => 290, font => $font,
     size => 12, string => $author, align => 0,
-    valign => 'top', halign => 'left'
+    valign => 'center', halign => 'right'
+  );
+
+  my $length = "=" x int(rand() * 9);
+  $img->align_string(
+    y => $inner_height + 17, x => 10, font => $font,
+    size => 9, string => "8".$length."D", align => 0,
+    valign => 'center', halign => 'left',
+    color => $white
+  );
+
+  my $arrowx = $d[0] - 30;
+  $img->polygon(
+    points => [[$arrowx, $inner_height],[$arrowx+20, $inner_height + 17],[$arrowx+20, $inner_height]],
+    color => "white"
   );
 
   $img->align_string(
-    y => $height + 5, x => 285, font => $font,
+    y => $height + 5, x => 290, font => $font,
     size => 9, string => $date, align => 0,
     valign => 'top', halign => 'right',
     color => $blue
   );
+
+
 
   my $data;
   $img->write(data => \$data, type => "png");

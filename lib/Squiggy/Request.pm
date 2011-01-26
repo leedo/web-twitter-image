@@ -17,7 +17,7 @@ sub new {
 
 sub new_response {
   my $self = shift;
-  Squiggy::Response->new($self->{cb});
+  Squiggy::Response->new($self->{env}, $self->{cb});
 }
 
 sub captures {

@@ -14,7 +14,16 @@ our %routers;
 
 sub router {
   my $package = shift;
-  $routers{$package} ||= Router::Simple->new
+
+  $routers{$package} ||= do {
+    my $router = Router::Simple->new;
+    $router->connect(
+      "/favicon.ico",
+      { code => sub {[204, [], ['not found']]} },
+      { method => "GET" }
+    );
+    $router;
+  };
 }
 
 sub to_psgi {
@@ -23,21 +32,29 @@ sub to_psgi {
 
   my $app = sub {
     my $env = shift;
-    if (my $p = $router->match($env)) {
-      return sub {
-        my $respond = shift;
-        my $cb = delete $p->{code};
-        my $req = Squiggy::Request->new($env, $respond, $p);
-        my $res = $req->new_response(200);
-        $cb->($req, $res);
-      };
-    }
-    else {
-      return [404, [], ['not found']];
-    }
+    $env->{'psgix.squiggy.router'} = $router;
+
+    return sub {
+      my $respond = shift;
+      dispatch($env, $respond);
+    };
   };
 
   Plack::Middleware::WebSocket->wrap($app);
+}
+
+sub dispatch {
+  my ($env, $respond) = @_;
+
+  if (my $p = $env->{'psgix.squiggy.router'}->match($env)) {
+    my $cb = delete $p->{code};
+    my $req = Squiggy::Request->new($env, $respond, $p);
+    my $res = $req->new_response(200);
+    $cb->($req, $res);
+  }
+  else {
+    $respond->([404, [], ['not found']]);
+  }
 }
 
 sub wrap_websocket {
