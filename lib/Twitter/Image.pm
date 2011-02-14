@@ -5,6 +5,7 @@ use Imager::Font::Wrap;
 use Date::Parse;
 use DateTime;
 use HTML::Entities;
+use List::Util qw/max/;
 
 use base 'Exporter';
 our @EXPORT = qw/tweet_image/;
@@ -19,7 +20,7 @@ my $font = Imager::Font->new(
 );
 
 sub tweet_image {
-  my $tweet = shift;
+  my ($tweet, $avatar) = @_;
 
   my $author = "$tweet->{user}{name} (\@$tweet->{user}{screen_name})";
   my $text = decode_entities $tweet->{text};
@@ -35,19 +36,25 @@ sub tweet_image {
 
   my $text_height = $d[3];
   my $inner_height = $text_height + 20;
-  my $height = $inner_height + 30;
+  my $height = $inner_height + 45;
 
-  my $img = Imager->new(xsize => 300, ysize => $height + 15, channels => 4);
+  my $img = Imager->new(xsize => 360, ysize => $height, channels => 4);
 
   $img->box(
     color => $blue, xmin => 0, ymin => 0,
-    xmax => 300, ymax => $height, filled => 1,
+    xmax => 360, ymax => $height, filled => 1,
   );
 
   $img->box(
     color => $white, xmin => 10, ymin => 10,
-    xmax => 290, ymax => $inner_height, filled => 1,
+    xmax => 295, ymax => $inner_height, filled => 1,
   );
+
+  if ($avatar) {
+    $avatar = Imager->new(data => $avatar);
+    $avatar = $avatar->scale(xpixels => 45);
+    $img->paste(src => $avatar, top => 10, left => 305);
+  }
 
   Imager::Font::Wrap->wrap_text(
     string => $text, font => $font, width => 270,
@@ -58,14 +65,6 @@ sub tweet_image {
     y => $inner_height + 17, x => 290, font => $font,
     size => 12, string => $author, align => 0,
     valign => 'center', halign => 'right'
-  );
-
-  my $length = "=" x int(rand() * 9);
-  $img->align_string(
-    y => $inner_height + 17, x => 10, font => $font,
-    size => 9, string => "8".$length."D", align => 0,
-    valign => 'center', halign => 'left',
-    color => $white
   );
 
   my $arrowx = $d[0] - 30;
@@ -80,8 +79,6 @@ sub tweet_image {
     valign => 'top', halign => 'right',
     color => $blue
   );
-
-
 
   my $data;
   $img->write(data => \$data, type => "png");
